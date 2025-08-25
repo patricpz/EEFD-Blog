@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  email               String    @unique
+  emailVerified       DateTime?
+  image               String?   
+  password_hash       String?
+  role                Role      @default(leitor)
+  bio                 String?
+  profile_picture_url String?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Relacionamentos
+  articles      Article[]
+  comments      Comment[]
+  claps         Clap[]
+  followers     Follower[]   @relation("followers_followed")
+  following     Follower[]   @relation("followers_follower")
+  notifications Notification[]
+  reviews       ArticleReview[]
+}
+
+
+model Article {
+  id             Int       @id @default(autoincrement())
+  author_id      Int
+  title          String
+  subtitle       String?
+  cover_image_url String?
+  content        String
+  status         ArticleStatus
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  published_at   DateTime?
+
+  // Relacionamentos
+  author    User       @relation(fields: [author_id], references: [id])
+  tags      ArticleTag[]
+  comments  Comment[]
+  claps     Clap[]
+  reviews   ArticleReview[]
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  articles ArticleTag[]
+}
+
+model ArticleTag {
+  article_id Int
+  tag_id     Int
+
+  article Article @relation(fields: [article_id], references: [id])
+  tag     Tag     @relation(fields: [tag_id], references: [id])
+
+  @@id([article_id, tag_id])
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  article_id Int
+  user_id    Int
+  content    String
+  created_at DateTime @default(now())
+
+  article Article @relation(fields: [article_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+}
+
+model Clap {
+  id         Int      @id @default(autoincrement())
+  article_id Int
+  user_id    Int
+  created_at DateTime @default(now())
+
+  article Article @relation(fields: [article_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+}
+
+model Follower {
+  follower_id Int
+  followed_id Int
+
+  follower User @relation("followers_follower", fields: [follower_id], references: [id])
+  followed User @relation("followers_followed", fields: [followed_id], references: [id])
+
+  @@id([follower_id, followed_id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  type      NotificationType
+  message   String
+  link      String?
+  is_read   Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model ArticleReview {
+  id          Int      @id @default(autoincrement())
+  article_id  Int
+  reviewer_id Int
+  status      ReviewStatus
+  comments    String?
+  reviewed_at DateTime?
+
+  article   Article @relation(fields: [article_id], references: [id])
+  reviewer  User    @relation(fields: [reviewer_id], references: [id])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  location    String?
+  start_date  DateTime
+  end_date    DateTime
+  link        String?
+}
+
+enum Role {
+  leitor
+  autor
+  moderador
+  admin
+}
+
+enum ArticleStatus {
+  rascunho
+  pendente
+  publicado
+  rejeitado
+}
+
+enum NotificationType {
+  novo_artigo
+  comentario
+  seguido
+}
+
+enum ReviewStatus {
+  aprovado
+  rejeitado
+  revisar
+}

@@ -1,0 +1,221 @@
+'use client';
+
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeftIcon, SaveIcon, CameraIcon } from "lucide-react";
+
+export default function EditProfilePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    bio: '',
+    image: ''
+  });
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+    if (session?.user) {
+      setFormData({
+        name: session.user.name || '',
+        email: session.user.email || '',
+        bio: '',
+        image: session.user.image || ''
+      });
+    }
+  }, [status, session, router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        router.push('/profile');
+      } else {
+        console.error('Erro ao atualizar perfil');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  const user = session.user;
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.[0]?.toUpperCase() || 'U';
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Voltar
+            </Button>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Editar Perfil
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Atualize suas informações pessoais
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Perfil</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <Avatar className="w-20 h-20">
+                    <AvatarImage 
+                      src={formData.image || undefined} 
+                      alt={formData.name || "Avatar"}
+                    />
+                    <AvatarFallback className="text-xl font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                  >
+                    <CameraIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="image" className="block text-sm font-medium mb-1">URL da Imagem</label>
+                  <Input
+                    id="image"
+                    name="image"
+                    type="url"
+                    value={formData.image}
+                    onChange={handleInputChange}
+                    placeholder="https://exemplo.com/sua-foto.jpg"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Name Field */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium mb-1">Nome Completo</label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Seu nome completo"
+                  required
+                />
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+
+              {/* Bio Field */}
+              <div className="space-y-2">
+                <label htmlFor="bio" className="block text-sm font-medium mb-1">Biografia</label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  placeholder="Conte um pouco sobre você..."
+                  rows={4}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-6">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <SaveIcon className="w-4 h-4" />
+                  {loading ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
