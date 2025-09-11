@@ -2,25 +2,24 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeftIcon, SaveIcon, CameraIcon } from "lucide-react";
 
 export default function EditProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    bio: '',
     image: ''
   });
+  const [imageError, setImageError] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -30,18 +29,38 @@ export default function EditProfilePage() {
       setFormData({
         name: session.user.name || '',
         email: session.user.email || '',
-        bio: '',
         image: session.user.image || ''
       });
+      setImageError(false);
     }
   }, [status, session, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    if (name === 'image') {
+      setImageError(false);
+    }
+  };
+
+  const handleImageButtonClick = () => {
+    // Pergunta uma URL de imagem e preenche automaticamente o campo
+    const url = window.prompt('Cole a URL da sua imagem (https://...)');
+    if (url === null) return; // cancelado
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const isValid = /^(https?:)\/\//i.test(trimmed);
+    if (!isValid) {
+      setImageError(true);
+      return;
+    }
+    setFormData(prev => ({ ...prev, image: trimmed }));
+    setImageError(false);
+    // foca o input para permitir ajustes
+    imageInputRef.current?.focus();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +77,16 @@ export default function EditProfilePage() {
       });
 
       if (response.ok) {
+        // Atualiza os dados na sessão para refletir imediatamente
+        try {
+          await update({
+            name: formData.name,
+            image: formData.image || null
+          } as any);
+        } catch (err) {
+          // Mesmo se falhar, seguimos para a página de perfil
+          console.warn('Falha ao atualizar sessão:', err);
+        }
         router.push('/profile');
       } else {
         console.error('Erro ao atualizar perfil');
@@ -122,9 +151,10 @@ export default function EditProfilePage() {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage 
-                      src={formData.image || undefined} 
+                    <AvatarImage
+                      src={!imageError && formData.image ? formData.image : undefined}
                       alt={formData.name || "Avatar"}
+                      onError={() => setImageError(true)}
                     />
                     <AvatarFallback className="text-xl font-semibold">
                       {initials}
@@ -135,6 +165,7 @@ export default function EditProfilePage() {
                     size="sm"
                     variant="outline"
                     className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                    onClick={() => fileInputRef.current?.click()}
                   >
                     <CameraIcon className="w-4 h-4" />
                   </Button>
@@ -149,7 +180,11 @@ export default function EditProfilePage() {
                     onChange={handleInputChange}
                     placeholder="https://exemplo.com/sua-foto.jpg"
                     className="mt-1"
+                    ref={imageInputRef}
                   />
+                  {imageError && (
+                    <p className="text-sm text-red-600 mt-2">Não foi possível carregar esta imagem. Verifique a URL.</p>
+                  )}
                 </div>
               </div>
 
@@ -167,32 +202,7 @@ export default function EditProfilePage() {
                 />
               </div>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="seu@email.com"
-                  required
-                />
-              </div>
-
-              {/* Bio Field */}
-              <div className="space-y-2">
-                <label htmlFor="bio" className="block text-sm font-medium mb-1">Biografia</label>
-                <Textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Conte um pouco sobre você..."
-                  rows={4}
-                />
-              </div>
+              {/* Removido: campo de Biografia */}
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-6">

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
+    const q = searchParams.get('q');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
@@ -30,6 +31,15 @@ export async function GET(request: NextRequest) {
     const whereClause: any = {};
     if (role) {
       whereClause.role = role;
+    }
+    if (q) {
+      const query = q.trim();
+      if (query.length > 0) {
+        whereClause.OR = [
+          { name: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } }
+        ];
+      }
     }
 
     const [users, total] = await Promise.all([

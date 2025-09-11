@@ -109,13 +109,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden">
               {article.author.image ? (
-                <Image
-                  src={article.author.image}
-                  alt={article.author.name}
-                  width={48}
-                  height={48}
-                  className="object-cover"
-                />
+                <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
+                {article.author.name.charAt(0).toUpperCase()}
+              </span>
               ) : (
                 <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
                   {article.author.name.charAt(0).toUpperCase()}

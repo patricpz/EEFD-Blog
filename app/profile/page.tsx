@@ -49,7 +49,7 @@ export default function ProfilePage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.back()}
+              onClick={() => router.push('/')}
               className="flex items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4" />

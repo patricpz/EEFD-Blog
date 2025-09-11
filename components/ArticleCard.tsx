@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ArticleInteractions from "./ArticleInteractions";
@@ -35,6 +36,7 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article, showInteractions = true }: ArticleCardProps) {
+  const [authorImageError, setAuthorImageError] = useState(false);
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
@@ -48,24 +50,23 @@ export default function ArticleCard({ article, showInteractions = true }: Articl
   };
 
   return (
-    <article className="py-8 border-b border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors duration-200">
-      <div className="flex gap-6">
+    <article className="py-8 border-b border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-900/50 transition-colors duration-200 overflow-hidden">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 min-w-0">
         {/* Content - Left Side */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Author Info */}
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden">
-              {article.author.image ? (
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  {article.author.name.charAt(0).toUpperCase()}
-                </span>
-                // <Image
-                //   src={article.author.image}
-                //   alt={article.author.name}
-                //   width={24}
-                //   height={24}
-                //   className="object-cover"
-                // />
+              {article.author.image && !authorImageError ? (
+                <Image
+                  src={article.author.image}
+                  alt={article.author.name}
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-cover"
+                  onError={() => setAuthorImageError(true)}
+                  unoptimized
+                />
               ) : (
                 <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                   {article.author.name.charAt(0).toUpperCase()}
@@ -82,20 +83,20 @@ export default function ArticleCard({ article, showInteractions = true }: Articl
 
           {/* Title */}
           <Link href={`/article/${article.id}`}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors break-words">
               {article.title}
             </h2>
           </Link>
 
           {/* Subtitle */}
           {article.subtitle && (
-            <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 text-base">
+            <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 text-base break-words">
               {article.subtitle}
             </p>
           )}
 
           {/* Content Preview */}
-          <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 text-sm leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 text-sm leading-relaxed break-words">
             {truncateText(article.content.replace(/<[^>]*>/g, ''), 120)}
           </p>
 
@@ -145,13 +146,15 @@ export default function ArticleCard({ article, showInteractions = true }: Articl
 
         {/* Image - Right Side */}
         {article.cover_image_url && (
-          <div className="flex-shrink-0">
-            <div className="relative w-28 h-28 rounded-md overflow-hidden">
+          <div className="flex-shrink-0 sm:ml-2">
+            <div className="relative w-full h-40 sm:w-28 sm:h-28 rounded-md overflow-hidden">
               <Image
                 src={article.cover_image_url}
                 alt={article.title}
                 fill
                 className="object-cover"
+                sizes="(max-width: 640px) 100vw, 112px"
+                priority={false}
               />
             </div>
           </div>

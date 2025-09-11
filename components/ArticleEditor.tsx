@@ -252,16 +252,7 @@ export function ArticleEditor({
   return (
     <div className={`simple-editor-wrapper ${className}`}>
       <EditorContext.Provider value={{ editor }}>
-        <Toolbar
-          ref={toolbarRef}
-          style={
-            isMobile
-              ? {
-                  bottom: `calc(100% - ${windowSize.height - bodyRect.y}px)`,
-                }
-              : {}
-          }
-        >
+        <Toolbar ref={toolbarRef}>
           {mobileView === "main" ? (
             <MainToolbarContent
               onHighlighterClick={() => setMobileView("highlighter")}

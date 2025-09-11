@@ -144,15 +144,15 @@ export default function WritePage() {
       {/* Header */}
       <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
               <Link href="/">
                 <Button variant="ghost" size="sm">
                   <ArrowLeftIcon className="h-4 w-4 mr-2" />
                 </Button>
               </Link>
               <div>
-                <h1 className="text-xl font-semibold">
+                <h1 className="text-lg sm:text-xl font-semibold">
                   Escrever Artigo
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -161,11 +161,12 @@ export default function WritePage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 onClick={() => setIsPreview(!isPreview)}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto"
               >
                 <EyeIcon className="h-4 w-4 mr-2" />
                 {isPreview ? 'Editar' : 'Visualizar'}
@@ -175,6 +176,7 @@ export default function WritePage() {
                 variant="outline"
                 onClick={handleSaveDraft}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto"
               >
                 <SaveIcon className="h-4 w-4 mr-2" />
                 Salvar Rascunho
@@ -183,6 +185,7 @@ export default function WritePage() {
               <Button
                 onClick={handlePublish}
                 disabled={isSubmitting || !formData.title.trim() || !formData.content.trim()}
+                className="col-span-2 sm:col-span-1 w-full sm:w-auto"
               >
                 <FileTextIcon className="h-4 w-4 mr-2" />
                 {isSubmitting ? 'Publicando...' : 'Publicar'}
@@ -210,7 +213,7 @@ export default function WritePage() {
                     placeholder="Digite o título do seu artigo..."
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className="text-lg"
+                    className="text-base sm:text-lg"
                   />
                 </div>
                 
@@ -229,13 +232,13 @@ export default function WritePage() {
                   <label className="block text-sm font-medium mb-2">
                     URL da Imagem de Capa
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       placeholder="https://exemplo.com/imagem.jpg"
                       value={formData.coverImageUrl}
                       onChange={(e) => handleInputChange('coverImageUrl', e.target.value)}
                     />
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="sm:w-auto">
                       <ImageIcon className="h-4 w-4" />
                     </Button>
                   </div>
@@ -261,7 +264,7 @@ export default function WritePage() {
                     initialContent={formData.content}
                     onContentChange={handleContentChange}
                     placeholder="Comece a escrever seu artigo... Use a barra de ferramentas acima para formatar o texto."
-                    className="min-h-[500px]"
+                    className="min-h-[320px] sm:min-h-[420px] md:min-h-[500px]"
                   />
                 )}
               </CardContent>

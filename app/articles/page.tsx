@@ -47,8 +47,9 @@ export default async function ArticlesPage() {
   return (
     <div className="min-h-screen bg-background">
       <HeaderBar />
-      
+
       <div className="max-w-6xl mx-auto px-4 py-8">
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">Todos os Artigos</h1>
@@ -75,7 +76,7 @@ export default async function ArticlesPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-8 max-w-4xl mx-auto">
             {articles.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,10 +78,18 @@ export default function AdminDashboard() {
   const [articleStatusFilter, setArticleStatusFilter] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [reviewComments, setReviewComments] = useState('');
   const [newUserRole, setNewUserRole] = useState('');
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -126,6 +135,7 @@ export default function AdminDashboard() {
   const loadArticles = async () => {
     const params = new URLSearchParams();
     if (articleStatusFilter) params.append('status', articleStatusFilter);
+    if (searchTerm) params.append('q', searchTerm);
     
     const response = await fetch(`/api/admin/articles?${params}`);
     const data = await response.json();
@@ -135,6 +145,7 @@ export default function AdminDashboard() {
   const loadUsers = async () => {
     const params = new URLSearchParams();
     if (userRoleFilter) params.append('role', userRoleFilter);
+    if (userSearchTerm) params.append('q', userSearchTerm);
     
     const response = await fetch(`/api/admin/users?${params}`);
     const data = await response.json();
@@ -150,6 +161,9 @@ export default function AdminDashboard() {
         
         if (response.ok) {
           setArticles(articles.filter(article => article.id !== articleId));
+          showToast('success', 'Artigo deletado com sucesso');
+        } else {
+          showToast('error', 'Falha ao deletar artigo');
         }
       } else {
         const status = action === 'approve' ? 'publicado' : 'rejeitado';
@@ -169,10 +183,14 @@ export default function AdminDashboard() {
           await loadArticles();
           setReviewComments('');
           setSelectedArticle(null);
+          showToast('success', action === 'approve' ? 'Artigo aprovado' : 'Artigo rejeitado');
+        } else {
+          showToast('error', 'Falha ao atualizar artigo');
         }
       }
     } catch (error) {
       console.error('Erro ao processar ação:', error);
+      showToast('error', 'Erro interno ao processar ação');
     }
   };
 
@@ -185,6 +203,9 @@ export default function AdminDashboard() {
         
         if (response.ok) {
           setUsers(users.filter(user => user.id !== userId));
+          showToast('success', 'Usuário deletado com sucesso');
+        } else {
+          showToast('error', 'Falha ao deletar usuário');
         }
       } else if (action === 'update' && newUserRole) {
         const response = await fetch('/api/admin/users', {
@@ -202,10 +223,16 @@ export default function AdminDashboard() {
           await loadUsers();
           setNewUserRole('');
           setSelectedUser(null);
+          setIsUserDialogOpen(false);
+          showToast('success', 'Usuário atualizado com sucesso');
+        } else {
+          const data = await response.json().catch(() => null);
+          showToast('error', data?.error || 'Falha ao atualizar usuário');
         }
       }
     } catch (error) {
       console.error('Erro ao processar ação:', error);
+      showToast('error', 'Erro interno ao processar ação');
     }
   };
 
@@ -256,8 +283,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {toast && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-md px-4 py-3 shadow-lg border text-sm ${toast.type === 'success' ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200' : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Dashboard de Moderador</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h1 className="text-3xl font-bold">Dashboard de Moderador</h1>
+          <Link href="/" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+            Voltar ao Início
+          </Link>
+        </div>
         <p className="text-gray-600 dark:text-gray-400">
           Gerencie artigos e usuários da plataforma
         </p>
@@ -284,31 +321,15 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 mb-6">
+              <div className="flex gap-4 mb-6 flex-col sm:flex-row">
                 <div className="flex-1">
                   <Input
                     placeholder="Buscar artigos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
+                    className="max-w-sm w-full"
                   />
                 </div>
-                <Select value={articleStatusFilter} onValueChange={setArticleStatusFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filtrar por status" />
-                  </SelectTrigger>
-                  {/* <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
-                    <SelectItem value="rascunho">Rascunho</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="publicado">Publicado</SelectItem>
-                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
-                  </SelectContent> */}
-                </Select>
-                <Button onClick={loadArticles} variant="outline">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtrar
-                </Button>
               </div>
 
               <div className="space-y-4">
@@ -338,45 +359,15 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedArticle(article)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Revisar Artigo</DialogTitle>
-                              <DialogDescription>
-                                {article.title}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <Textarea
-                                placeholder="Comentários da revisão (opcional)"
-                                value={reviewComments}
-                                onChange={(e) => setReviewComments(e.target.value)}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button
-                                onClick={() => handleArticleAction('reject', article.id)}
-                                variant="destructive"
-                              >
-                                Rejeitar
-                              </Button>
-                              <Button
-                                onClick={() => handleArticleAction('approve', article.id)}
-                              >
-                                Aprovar
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          asChild
+                          variant="outline" 
+                          size="sm"
+                        >
+                          <a href={`/article/${article.id}`} target="_blank" rel="noopener noreferrer" aria-label="Ver artigo">
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        </Button>
                         
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -420,31 +411,15 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 mb-6">
+              <div className="flex gap-4 mb-6 flex-col sm:flex-row">
                 <div className="flex-1">
                   <Input
                     placeholder="Buscar usuários..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                    className="max-w-sm w-full"
                   />
                 </div>
-                <Select value={userRoleFilter} onValueChange={setUserRoleFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filtrar por role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* <SelectItem value="">Todas as roles</SelectItem>
-                    <SelectItem value="leitor">Leitor</SelectItem>
-                    <SelectItem value="autor">Autor</SelectItem>
-                    <SelectItem value="moderador">Moderador</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem> */}
-                  </SelectContent>
-                </Select>
-                <Button onClick={loadUsers} variant="outline">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtrar
-                </Button>
               </div>
 
               <div className="space-y-4">
@@ -477,19 +452,19 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Dialog>
+                        <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                           <DialogTrigger asChild>
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => setSelectedUser(user)}
+                              onClick={() => { setSelectedUser(user); setNewUserRole(user.role); setIsUserDialogOpen(true); }}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Alterar Role do Usuário</DialogTitle>
+                              <DialogTitle>Alterar tipo de Usuário</DialogTitle>
                               <DialogDescription>
                                 {user.name} - {user.email}
                               </DialogDescription>
@@ -497,11 +472,11 @@ export default function AdminDashboard() {
                             <div className="space-y-4">
                               <Select value={newUserRole} onValueChange={setNewUserRole}>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a nova role" />
+                                  <SelectValue placeholder="Selecione o novo tipo de usuário" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="leitor">Leitor</SelectItem>
-                                  <SelectItem value="autor">Autor</SelectItem>
+                                  <SelectItem value="autor">Escritor</SelectItem>
                                   <SelectItem value="moderador">Moderador</SelectItem>
                                   <SelectItem value="admin">Admin</SelectItem>
                                 </SelectContent>
