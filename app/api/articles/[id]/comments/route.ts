@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@/lib/generated/prisma';
@@ -6,10 +6,11 @@ import { PrismaClient } from '@/lib/generated/prisma';
 const prisma = new PrismaClient();
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: { params: { id: string } }
 ) {
   try {
+    const { params } = context;
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
@@ -66,10 +67,11 @@ export async function POST(
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  context: { params: { id: string } }
 ) {
   try {
+    const { params } = context;
     const articleId = parseInt(params.id);
     
     const comments = await prisma.comment.findMany({
