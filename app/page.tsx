@@ -106,7 +106,7 @@ export default async function Home() {
       <footer className="bg-white dark:bg-zinc-900 border-t dark:border-zinc-800 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-muted-foreground">
-            © {new Date().getFullYear()} Blog Platform. Todos os direitos reservados.
+            © {new Date().getFullYear()}  Escola de Extensão. Todos os direitos reservados.
           </p>
         </div>
       </footer>

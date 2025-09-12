@@ -75,7 +75,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <HeaderBar />
       
       <article className="max-w-4xl mx-auto px-4 py-8">
@@ -96,11 +96,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
           
           {/* Title */}
-          <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+          <h1 className="text-4xl font-bold mb-4 break-words">{article.title}</h1>
           
           {/* Subtitle */}
           {article.subtitle && (
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-6 break-words">
               {article.subtitle}
             </p>
           )}
@@ -160,32 +160,32 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         )}
 
         {/* Content */}
-        <div className="prose prose-lg max-w-none dark:prose-invert">
+        <div className="prose prose-lg max-w-none dark:prose-invert break-words">
           <div 
             dangerouslySetInnerHTML={{ 
               __html: renderContent(article.content) 
             }}
-            className="text-gray-800 dark:text-gray-200 leading-relaxed"
+            className="text-gray-800 dark:text-gray-200 leading-relaxed break-words"
           />
         </div>
 
         {/* Footer */}
         <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 👏 Aplaudir
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 💬 Comentar
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 📤 Compartilhar
               </Button>
             </div>
             
             <Link href="/write">
-              <Button size="sm">
+              <Button size="sm" className="w-full sm:w-auto">
                 ✍️ Escrever Artigo
               </Button>
             </Link>
