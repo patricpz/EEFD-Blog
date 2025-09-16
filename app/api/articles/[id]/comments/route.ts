@@ -7,10 +7,10 @@ const prisma = new PrismaClient();
 
 export async function POST(
   request: Request,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
-    const { params } = context;
+    const { params } = context as { params: { id: string } };
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
@@ -68,10 +68,10 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: any
 ) {
   try {
-    const { params } = context;
+    const { params } = context as { params: { id: string } };
     const articleId = parseInt(params.id);
     
     const comments = await prisma.comment.findMany({

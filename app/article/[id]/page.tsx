@@ -11,7 +11,9 @@ interface ArticlePageProps {
   params: {
     id: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
+
 
 async function getArticle(id: string) {
   try {

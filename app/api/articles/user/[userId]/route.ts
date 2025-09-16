@@ -5,10 +5,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: Request,
-  context: { params: { userId: string } }
+  context: any
 ) {
   try {
-    const { params } = context;
+    const { params } = context as { params: { userId: string } };
     const session = await getServerSession(authOptions);
     
     if (!session) {
