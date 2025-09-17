@@ -165,7 +165,7 @@ export default function EditProfilePage() {
                     size="sm"
                     variant="outline"
                     className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={handleImageButtonClick}
                   >
                     <CameraIcon className="w-4 h-4" />
                   </Button>

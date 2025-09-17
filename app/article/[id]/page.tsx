@@ -8,11 +8,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface ArticlePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
+
 
 
 async function getArticle(id: string) {
@@ -50,7 +51,8 @@ async function getArticle(id: string) {
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const article = await getArticle(params.id);
+  const { id } = await params;
+  const article = await getArticle(id);
 
   if (!article) {
     notFound();
@@ -63,7 +65,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     });
   };
 
-  // Função simples para converter markdown básico para HTML
   const renderContent = (content: string) => {
     return content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
